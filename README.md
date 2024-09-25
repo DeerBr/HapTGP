@@ -1,6 +1,5 @@
 Code pour le projet du cours de prototypage
 Fonctionnalité :
-  -
 
 Utilisations du décodeur de commande série :
   Entrer une commande et un argument avec un espace entre les deux, voici les commandes disponnibles
