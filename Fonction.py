@@ -51,9 +51,13 @@ class uSD:
             
 class ds3231:
     def __init__(self, i2c):
-        self.module_rtc = DS3231.DS3231(i2c=i2c)
+        self.moduleRtc = DS3231.DS3231(i2c=i2c)
         
-    def Date(self):
-        self.date = module_rtc.get_time()
+    def getDate(self):
+        self.date = moduleRtc.get_time()
         return date
+    
+    def setDate(self, YY, MM, mday, hh, mm, ss, wday, yday):
+        dateManuel = [YY, MM, mday, hh, mm, ss, wday, yday]
+        self.date = moduleRtc.set_time(dateManuel)
         
