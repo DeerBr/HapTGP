@@ -54,30 +54,27 @@ class ds3231:
         self.moduleRtc = DS3231.DS3231(i2c=i2c)
         
     def getDate(self):
-        annee = self.moduleRtc.get_time([0])
-        mois = self.moduleRtc.get_time([1])
-        jour = self.moduleRtc.get_time([2])
-        heure = self.moduleRtc.get_time([3])
-        minute = self.moduleRtc.get_time([4])
-        seconde = self.moduleRtc.get_time([5])
-        jourSemaine = self.moduleRtc.get_time([6])
-        if jourSemaine == 1:
-            jourSemaine = "Lundi"
-        elif jourSemaine == 2:
-            jourSemaine = "Mardi"
-        elif jourSemaine == 3:
-            jourSemaine = "Mercredi"
-        elif jourSemaine == 4:
-            jourSemaine = "Jeudi"
-        elif jourSemaine == 5:
-            jourSemaine = "Vendredi"
-        elif jourSemaine == 6:
-            jourSemaine = "Samedi"
-        elif jourSemaine == 7:
-            jourSemaine = "Dimanche"
-        else:
-            pass
-        self.date = f"Date: {jourSemaine, jour, mois, annee}, Heure: {heure, minute, seconde}\n"
+        
+        buffer = bytearray(7)
+        
+        time_data = self.moduleRtc.get_time(buffer)
+
+        print(f"Time data received: {time_data}")
+
+        annee = time_data[0]
+        mois = time_data[1]
+        jour = time_data[2]
+        heure = time_data[3]
+        minute = time_data[4]
+        seconde = time_data[5]
+        jourSemaine = time_data[6]
+        
+        joursSemaine = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+ 
+        jourSemaine = joursSemaine[jourSemaine]
+
+        # Formatage de la date et de l'heure
+        self.date = f"{jourSemaine}, {jour}/{mois}/{annee}, Heure: {heure}:{minute}:{seconde}"
         return self.date
     
     def setDate(self, YY, MM, mday, hh, mm, ss, wday, yday):
