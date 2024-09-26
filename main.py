@@ -130,23 +130,28 @@ try:
                     print(nak)
                     
         # Contrôle écriture carte uSD            
-            elif Commande == 'Save':
+            elif Commande == 'Save' and NbArg ==0:
                 data = {
                     "Temperature" : bme.temp(),
                     "Humidity" : bme.hum(),
                     "Pression" : bme.pres(),
-                    "Luminositer" : veml.lux()
+                    "Luminositer" : veml.lux(),
+                    "Date" : date.getDate()
                     }
                 uSD.ecrire(data)
                 print(ack)
             
         # Contrôle RTC
-            elif Commande == 'Heure':
-                print(date.Date())
-                print(ack)                
-            
-            else:
-                print(nak)
+            elif Commande == 'Heure' and NbArg >=1:
+                if Arg[0] == "get":
+                    print(date.getDate())
+                    print(ack)
+                elif Arg[0] == "set":
+                    YY, MM, mday, hh, mm, ss, wday, yday = Arg[1], Arg[2], Arg[3], Arg[4], Arg[5], Arg[6], Arg[7], Arg[8]
+                    print(date.setDate(YY, MM, mday, hh, mm, ss, wday, yday))
+                    print(ack)
+                else:
+                    print(nak)
 
         sleep(1)
         
