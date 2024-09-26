@@ -135,7 +135,8 @@ try:
                     "Temperature" : bme.temp(),
                     "Humidity" : bme.hum(),
                     "Pression" : bme.pres(),
-                    "Luminositer" : veml.lux()
+                    "Luminositer" : veml.lux(),
+                    "Date" : date.getDate()
                     }
                 uSD.ecrire(data)
                 print(ack)

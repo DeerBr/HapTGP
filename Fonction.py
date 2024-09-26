@@ -44,7 +44,7 @@ class uSD:
         self.vfs = os.VfsFat(self.sd)
         os.mount(self.vfs, "/sd")
     def ecrire(self, data):
-        data_string = f"Temperature: {data['Temperature']}, Humidity: {data['Humidity']}, Pression: {data['Pression']}, Luminositer: {data['Luminositer']}\n"
+        data_string = f"Temperature: {data['Temperature']}, Humidity: {data['Humidity']}, Pression: {data['Pression']}, Luminositer: {data['Luminositer']}, Date: {data['Date']}\n"
         with open('/sd/data.txt', 'a') as file:  # Ouvre le fichier en mode append
             file.write(data_string)  # Écrit la string dans le fichier
             file.close()
@@ -54,7 +54,30 @@ class ds3231:
         self.moduleRtc = DS3231.DS3231(i2c=i2c)
         
     def getDate(self):
-        self.date = self.moduleRtc.get_time()
+        annee = self.moduleRtc.get_time([0])
+        mois = self.moduleRtc.get_time([1])
+        jour = self.moduleRtc.get_time([2])
+        heure = self.moduleRtc.get_time([3])
+        minute = self.moduleRtc.get_time([4])
+        seconde = self.moduleRtc.get_time([5])
+        jourSemaine = self.moduleRtc.get_time([6])
+        if jourSemaine == 1:
+            jourSemaine = "Lundi"
+        elif jourSemaine == 2:
+            jourSemaine = "Mardi"
+        elif jourSemaine == 3:
+            jourSemaine = "Mercredi"
+        elif jourSemaine == 4:
+            jourSemaine = "Jeudi"
+        elif jourSemaine == 5:
+            jourSemaine = "Vendredi"
+        elif jourSemaine == 6:
+            jourSemaine = "Samedi"
+        elif jourSemaine == 7:
+            jourSemaine = "Dimanche"
+        else:
+            pass
+        self.date = f"Date: {jourSemaine, jour, mois, annee}, Heure: {heure, minute, seconde}\n"
         return self.date
     
     def setDate(self, YY, MM, mday, hh, mm, ss, wday, yday):
