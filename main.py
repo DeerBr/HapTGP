@@ -59,8 +59,8 @@ monserie.start()                                           # Démarrage de la co
  
 mondecodeur = decodeur()            # Initialisation du décodeur de commande
 
-ack = '*'
-nak = '?'
+ack = "*"
+nak = "?"
 
 # Mapping de valeur pour le retour d'un float
 def map_float(x, in_min, in_max, out_min, out_max):
@@ -78,6 +78,7 @@ date = fonc.ds3231(i2c)
 uSD = fonc.uSD()
 bme = fonc.bme280(i2c)
 veml = fonc.veml7700(i2c)
+hall = fonc.hallSensor(i2c)
 try:
     while True:                             # Boucle infinie
         buffLine = monserie.getLineBuffer() # Obtenir une ligne de commande si présente
@@ -85,52 +86,52 @@ try:
         # Affichage de la commande et des arguments
         if buffLine:
             Commande, NbArg, Arg = mondecodeur.decode(buffLine)
-            print('Commande = ' + Commande)
-            print('NbArg = ' + str(NbArg))
+            print("Commande = " + Commande)
+            print("NbArg = " + str(NbArg))
             if NbArg > 0:
                 i=0
                 for x in Arg:
-                    print('Arg['+ str(i) +'] = ' + x)
+                    print("Arg["+ str(i) +"] = " + x)
                     i = i + 1
             
         # Contrôle des Dels rouge et verte
         if buffLine:                        
             Commande, NbArg, Arg = mondecodeur.decode(buffLine)
             
-            if Commande == 'DELR' and NbArg >= 1:
+            if Commande == "DELR" and NbArg >= 1:
                 duty = map_int_limit(int(float(Arg[0])), 0, 100, 0, 1023)  # Mapping 0-100 à 0-1023
                 LedRouge.duty(duty) # Change Duty cycle
                 print(ack)
             
-            elif Commande == 'DELV' and Arg[0] in ['ON', 'OFF']:
-                if Arg[0] == 'ON':            
+            elif Commande == "DELV" and Arg[0] in ["ON", "OFF"]:
+                if Arg[0] == "ON":            
                    LedVerte.value(1)
-                elif Arg[0] == 'OFF':
+                elif Arg[0] == "OFF":
                    LedVerte.value(0)
                 print(ack)
                 
         # Contrôle des capteurs          
-            elif Commande == 'BME' and NbArg >=1:
-                if Arg[0] == 'Temp':
+            elif Commande == "BME" and NbArg >=1:
+                if Arg[0] == "Temp":
                     print("Temperature: ", bme.temp())
                     print(ack)
-                elif Arg[0] == 'Hum':
+                elif Arg[0] == "Hum":
                     print("Humidity: ", bme.hum())
                     print(ack)
-                elif Arg[0] == 'Pres':
+                elif Arg[0] == "Pres":
                     print("Pressure: ", bme.pres())
                     print(ack)
                 else:
                     print(nak)
-            elif Commande == 'VEML' and NbArg >=1:
-                if Arg[0] == 'Lum':
+            elif Commande == "VEML" and NbArg >=1:
+                if Arg[0] == "Lum":
                     print("Luminositer: ", veml.lux())
                     print(ack)
                 else:
                     print(nak)
                     
         # Contrôle écriture carte uSD            
-            elif Commande == 'Save' and NbArg ==0:
+            elif Commande == "Save" and NbArg ==0:
                 data = {
                     "Temperature" : bme.temp(),
                     "Humidity" : bme.hum(),
@@ -142,7 +143,7 @@ try:
                 print(ack)
             
         # Contrôle RTC
-            elif Commande == 'Heure' and NbArg >=1:
+            elif Commande == "Heure" and NbArg >=1:
                 if Arg[0] == "get":
                     print(date.getDate())
                     print(ack)
@@ -152,10 +153,25 @@ try:
                     print(ack)
                 else:
                     print(nak)
+                    
+        # Contrôle capteur effet Hall
+            elif Commande == "Hall" and NbArg >=1:
+                if Arg[0] == "axe":
+                    if Arg[1] == "x":
+                        print(hall.read_axe(x))
+                        print(ack)
+                    elif Arg[1] == "y":
+                        print(hall.read_axe(y))
+                        print(ack)
+                    elif Arg[1] == "z":
+                        print(hall.read_axe(z))
+                        print(ack)
+                else:
+                    print(nak)
 
         sleep(1)
         
 except KeyboardInterrupt:                   # trap Ctrl-C input
-    print('Stop')
+    print("Stop")
     monserie.stop()                   
     exit()

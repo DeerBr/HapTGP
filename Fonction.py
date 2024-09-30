@@ -1,6 +1,7 @@
+import os
 import BME280
 import VEML7700
-import os
+import HallSensor
 import DS3231
 from machine import Pin, PWM, SoftI2C, SoftSPI, SDCard
 
@@ -80,4 +81,23 @@ class ds3231:
     def setDate(self, YY, MM, mday, hh, mm, ss, wday, yday):
         dateManuel = [int(YY), int(MM), int(mday), int(hh), int(mm), int(ss), int(wday), int(yday)]
         self.date = self.moduleRtc.set_time(dateManuel)
+        
+class hallSensor:
+    def __init__(self, i2c):
+        self.hall = HallSensor.TMAG5273B1(i2c)
+        
+    def read_axe(self, axe):
+        if axe == "x":
+            value = self.hall.read_x()
+        elif axe == "y":
+            value = self.hall.read_y()
+        elif axe == "z":
+            value = self.hallread_z()
+        else:
+            value = "Erreur d'axe"
+        return value
+    
+    def read_all(self):
+        value = read_all_magnetic_axes()
+        return value
         
