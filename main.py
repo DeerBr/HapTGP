@@ -48,6 +48,7 @@ LedRouge.duty(100)                  # Duty cycle initial, valide entre 0 à 1023
 LedVerte = Pin(2, Pin.OUT)          # Broche 2 en sortie, Del verte du ESP32 (plaquette protoTPhys)
 LedVerte.value(0)                   # Del verte initialement éteinte
 # LedVerte_On_Off = True
+Backlight = Pin(2, Pin.OUT)
 i2c_sda = 21
 i2c_scl = 22
 i2c_baudrate = 100000
@@ -153,6 +154,14 @@ try:
                 else:
                     print(nak)
 
+        # Contrôle Ecran
+            elif Commande == "Ecran" and NbArg >=1:
+                if Arg[0] == "text":
+                    Backlight.value(1)
+                    print(ack)
+                else:
+                    print(nak)
+        
         sleep(1)
         
 except KeyboardInterrupt:                   # trap Ctrl-C input

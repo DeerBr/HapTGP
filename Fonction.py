@@ -2,7 +2,9 @@ import BME280
 import VEML7700
 import os
 import DS3231
+import GC9A01
 from machine import Pin, PWM, SoftI2C, SoftSPI, SDCard
+from fonts import vga2_bold_16x32 as font
 
 i2c_sda = 21
 i2c_scl = 22
@@ -13,9 +15,14 @@ spi_phase = 0
 spi_sck = 18
 spi_mosi = 23
 spi_miso = 19
+dc = Pin(21, Pin.OUT)
+cs = Pin(13, Pin.OUT)
+reset = Pin(26, Pin.OUT)
+backlight = Pin(14, Pin.OUT)
 
 i2c = SoftI2C(scl=Pin(i2c_scl), sda=Pin(i2c_sda), freq=i2c_baudrate)
 spi = SoftSPI(baudrate=spi_baudrate, polarity=spi_polarity, phase=spi_phase, sck=Pin(spi_sck), mosi=Pin(spi_mosi), miso=Pin(spi_miso))
+ecran_spi = (2, spi_baudrate, Pin(spi_sck), Pin(spi_mosi))
 
 class bme280:
     def __init__(self,i2c):
@@ -80,4 +87,11 @@ class ds3231:
     def setDate(self, YY, MM, mday, hh, mm, ss, wday, yday):
         dateManuel = [int(YY), int(MM), int(mday), int(hh), int(mm), int(ss), int(wday), int(yday)]
         self.date = self.moduleRtc.set_time(dateManuel)
+        
+class Ecran:
+    def __init__(self, ecran_spi, dc, cs, reset, backlight, rotation = 0):
+        self.ecran = GC9A01.GC9A01(self, spi=ecran_spi, dc=dc, cs=cs, reset=reset, backlight=backlight, rotation=rotation)
+    def test(self, font):
+        self.ecran.text(font, "Hello!", 25, 25)
+    
         
