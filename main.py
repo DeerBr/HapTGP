@@ -38,9 +38,7 @@ from utime import sleep
 from sys import exit
 from ESP32_USB_serial_periodic_class import UsbSerialPeriodic
 from Decode_Commande_Arguments_class import decodeur
-import vga2_bold_16x32 as font
 import Fonction as fonc
-import BME280
 
 i2c_sda = 21
 i2c_scl = 22
@@ -89,6 +87,7 @@ uSD = fonc.uSD(uSD_cs)
 bme = fonc.bme280(i2c)
 veml = fonc.veml7700(i2c)
 ecran = fonc.Ecran(ecran_spi, dc, ecran_cs, reset, backlight, 0)
+internet = fonc.wifi_connection('Deer', 'Deerdeer')
 try:
     while True:                             # Boucle infinie
         buffLine = monserie.getLineBuffer() # Obtenir une ligne de commande si présente
@@ -143,10 +142,12 @@ try:
                 if Arg[0] == "get":
                     print(date.getDate())
                     print(ack)
-                elif Arg[0] == "set":
+                elif Arg[0] == "manuel":
                     YY, MM, mday, hh, mm, ss, wday, yday = Arg[1], Arg[2], Arg[3], Arg[4], Arg[5], Arg[6], Arg[7], Arg[8]
-                    print(date.setDate(YY, MM, mday, hh, mm, ss, wday, yday))
+                    print(date.setDate_manual(YY, MM, mday, hh, mm, ss, wday, yday))
                     print(ack)
+                elif Arg[0] == "ntp":
+                    date.setDate_ntp()
                 else:
                     print(nak)
 
@@ -156,6 +157,12 @@ try:
                     uSD_cs.value(1)
                     ecran_cs.value(0)
                     ecran.test() 
+                    print(ack)
+                elif Arg[0] == "clear":
+                    ecran.clear()
+                    print(ack)
+                elif Arg[0] == "menu":
+                    ecran.menu()
                     print(ack)
                 else:
                     print(nak)

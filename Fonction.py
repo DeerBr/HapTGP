@@ -1,33 +1,6 @@
-import BME280
-import VEML7700
-import os
-import DS3231
-import GC9A01
-import time
+import BME280, VEML7700, os, DS3231, GC9A01, time, network, ntptime, utime, esp
 from machine import Pin, PWM, SoftI2C, SoftSPI, SPI, SDCard
-import vga2_bold_16x32 as font
-
-i2c_sda = 21
-i2c_scl = 22
-i2c_baudrate = 100000
-# uSD
-uSD_cs = Pin(5, Pin.OUT)
-spi_baudrate = 100000
-spi_polarity = 0
-spi_phase = 0
-# Ecran
-spi_sck = 18
-spi_mosi = 23
-spi_miso = 19
-dc = Pin(16, Pin.OUT)
-ecran_cs = Pin(32, Pin.OUT)
-reset = Pin(4, Pin.OUT)
-backlight = Pin(2, Pin.OUT)
-rotation = 0
-
-i2c = SoftI2C(scl=Pin(i2c_scl), sda=Pin(i2c_sda), freq=i2c_baudrate)
-spi = SoftSPI(baudrate=spi_baudrate, polarity=spi_polarity, phase=spi_phase, sck=Pin(spi_sck), mosi=Pin(spi_mosi), miso=Pin(spi_miso))
-ecran_spi = SoftSPI(-1, miso=Pin(spi_miso), mosi=Pin(spi_mosi), sck=Pin(spi_sck))
+import vga1_8x8 as font
 
 class bme280:
     def __init__(self,i2c):
@@ -98,9 +71,16 @@ class ds3231:
         self.date = f"{jourSemaine}, {jour}/{mois}/{annee}, Heure: {heure}:{minute}:{seconde}"
         return self.date
     
-    def setDate(self, YY, MM, mday, hh, mm, ss, wday, yday):
+    def setDate_manual(self, YY, MM, mday, hh, mm, ss, wday, yday):
         dateManuel = [int(YY), int(MM), int(mday), int(hh), int(mm), int(ss), int(wday), int(yday)]
         self.date = self.moduleRtc.set_time(dateManuel)
+    
+    def setDate_ntp(self):
+        ntptime.host = 'ca.pool.ntp.org'
+        ntptime.settime()
+        t = ntptime.time()
+        print(t)
+        print(type(t))
         
 class Ecran:
     def __init__(self, ecran_spi, dc, ecran_cs, reset, backlight, rotation):
@@ -108,7 +88,25 @@ class Ecran:
     def test(self):
         self.ecran.fill(GC9A01.color565(0, 0, 255))  # Remplir l'écran en bleu
         self.ecran.text(font,"GC9A01 Test", 30, 110,GC9A01.color565(255, 255, 255))
-        time.sleep(5)
+    def menu(self):
+        blanc = GC9A01.WHITE
+        self.ecran.fill(GC9A01.BLACK)
+        self.ecran.text(font, "MENU", 110, 30, blanc)
+        self.ecran.text(font, "1- BME280", 35, 50, blanc)
+        self.ecran.text(font, "2- VEML7700", 35, 70, blanc)
+    def clear(self):
         self.ecran.fill(GC9A01.color565(0, 0, 0))  # Efface l'écran
-    
+
+class wifi_connection:
+    def __init__(self, ssid, key):
+        self.station = network.WLAN(network.STA_IF)
+        self.station.active(True)
+        if not self.station.active():
+            print("erreur lors de l'activation du wifi")
+            raise RuntimeError("erreur lors de l'activation du wifi")
+        self.station.connect(ssid, key)
+        try:
+            self.station.isconnected()
+        except Exception as e:
+            print("Erreur lors de la connection internet:", e)
         
