@@ -1,5 +1,5 @@
-import BME280, VEML7700, os, DS3231, GC9A01, time, network, ntptime, utime, esp
-from machine import Pin, PWM, SoftI2C, SoftSPI, SPI, SDCard
+import BME280, VEML7700, os, DS3231, GC9A01, time, network, ntptime, SDCard
+from machine import Pin, PWM, SoftI2C, SoftSPI, SPI
 import vga1_8x8 as font
 
 class bme280:
@@ -26,8 +26,8 @@ class veml7700:
             print("Erreur lors de la lecture du VEML7700:", e)
     
 class uSD:
-    def __init__(self, uSD_cs):
-        self.sd = SDCard(slot=2, width=8, cs=uSD_cs)
+    def __init__(self, spi, uSD_cs):
+        self.sd = SDCard.SDCard(spi, cs=uSD_cs)
          # Try mounting the SD card filesystem
         try:
             os.mount(self.sd, "/sd")
@@ -78,25 +78,23 @@ class ds3231:
     def setDate_ntp(self):
         ntptime.host = 'ca.pool.ntp.org'
         ntptime.settime()
-        t = ntptime.time()
-        print(t)
-        print(type(t))
+        ntp = time.gmtime(ntptime.time())
+        print(ntp)
+        self.moduleRtc.set_time(ntptime.time())
         
 class Ecran:
     def __init__(self, ecran_spi, dc, ecran_cs, reset, backlight, rotation):
         self.ecran = GC9A01.GC9A01(ecran_spi, dc, ecran_cs, reset, backlight, rotation)
-    def test(self):
-        self.ecran.fill(GC9A01.color565(0, 0, 255))  # Remplir l'écran en bleu
-        self.ecran.text(font,"GC9A01 Test", 30, 110,GC9A01.color565(255, 255, 255))
+    def clear(self):
+        self.ecran.fill(GC9A01.color565(0, 0, 0))  # Efface l'écran
     def menu(self):
         blanc = GC9A01.WHITE
         self.ecran.fill(GC9A01.BLACK)
-        self.ecran.text(font, "MENU", 110, 30, blanc)
-        self.ecran.text(font, "1- BME280", 35, 50, blanc)
-        self.ecran.text(font, "2- VEML7700", 35, 70, blanc)
-    def clear(self):
-        self.ecran.fill(GC9A01.color565(0, 0, 0))  # Efface l'écran
-
+        self.ecran.text(font, "MENU", 110, 50, blanc)
+        self.ecran.text(font, "1- BME280", 35, 70, blanc)
+        self.ecran.text(font, "2- VEML7700", 35, 90, blanc)
+        self.ecran.text(font, "3- uSD", 35, 110, blanc)
+        
 class wifi_connection:
     def __init__(self, ssid, key):
         self.station = network.WLAN(network.STA_IF)
@@ -109,4 +107,6 @@ class wifi_connection:
             self.station.isconnected()
         except Exception as e:
             print("Erreur lors de la connection internet:", e)
+    def verif_connect(self):
+        self.station.isconnected()
         

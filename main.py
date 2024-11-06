@@ -83,11 +83,11 @@ def map_int_limit(x, i_m, i_M, o_m, o_M):
     return max(min(o_M, (x - i_m) * (o_M - o_m) // (i_M - i_m) + o_m), o_m)
 
 date = fonc.ds3231(i2c)
-uSD = fonc.uSD(uSD_cs)
+uSD = fonc.uSD(spi ,uSD_cs)
 bme = fonc.bme280(i2c)
 veml = fonc.veml7700(i2c)
 ecran = fonc.Ecran(ecran_spi, dc, ecran_cs, reset, backlight, 0)
-internet = fonc.wifi_connection('Deer', 'Deerdeer')
+internet = fonc.wifi_connection('CAL-Techno', 'technophys123')
 try:
     while True:                             # Boucle infinie
         buffLine = monserie.getLineBuffer() # Obtenir une ligne de commande si présente
@@ -153,12 +153,7 @@ try:
 
         # Contrôle Ecran
             elif Commande == "Ecran" and NbArg >=1:
-                if Arg[0] == "test":
-                    uSD_cs.value(1)
-                    ecran_cs.value(0)
-                    ecran.test() 
-                    print(ack)
-                elif Arg[0] == "clear":
+                if Arg[0] == "clear":
                     ecran.clear()
                     print(ack)
                 elif Arg[0] == "menu":
