@@ -33,26 +33,34 @@
 #          pour terminer le programme MicroPython sur le ESP32. Vous pouvez revenir à Thonny.
 #          
 
-from machine import Pin, PWM, SoftI2C
+from machine import Pin, PWM, SoftI2C, SoftSPI, SPI
 from utime import sleep
 from sys import exit
 from ESP32_USB_serial_periodic_class import UsbSerialPeriodic
 from Decode_Commande_Arguments_class import decodeur
 import Fonction as fonc
-import BME280
 
-
-frequence = 1000                    # Fréquence du PWM Led Rouge= 1000Hz
-LedRouge = PWM(Pin(4), frequence)   # PWM à D4 (Del rouge protoTphys)
-LedRouge.duty(100)                  # Duty cycle initial, valide entre 0 à 1023
-LedVerte = Pin(2, Pin.OUT)          # Broche 2 en sortie, Del verte du ESP32 (plaquette protoTPhys)
-LedVerte.value(0)                   # Del verte initialement éteinte
-# LedVerte_On_Off = True
 i2c_sda = 21
 i2c_scl = 22
 i2c_baudrate = 100000
+# uSD
+uSD_cs = Pin(5, Pin.OUT)
+spi_baudrate = 100000
+spi_polarity = 1
+spi_phase = 0
+# Ecran
+spi_sck = 18
+spi_mosi = 23
+spi_miso = 19
+dc = Pin(16, Pin.OUT)
+ecran_cs = Pin(32, Pin.OUT)
+reset = Pin(4, Pin.OUT)
+backlight = Pin(2, Pin.OUT)
+rotation = 0
 
 i2c = SoftI2C(scl=Pin(i2c_scl), sda=Pin(i2c_sda), freq=i2c_baudrate)
+ecran_spi = SoftSPI(-1, miso=Pin(spi_miso), mosi=Pin(spi_mosi), sck=Pin(spi_sck))
+spi = SoftSPI(baudrate=spi_baudrate, polarity=spi_polarity, phase=spi_phase, sck=Pin(spi_sck), mosi=Pin(spi_mosi), miso=Pin(spi_miso))
 
 monserie = UsbSerialPeriodic(Echo=True, inBuffersize= 128) # Pour l'initialisation de l'objet de communication
 monserie.start()                                           # Démarrage de la communication
@@ -75,9 +83,11 @@ def map_int_limit(x, i_m, i_M, o_m, o_M):
     return max(min(o_M, (x - i_m) * (o_M - o_m) // (i_M - i_m) + o_m), o_m)
 
 date = fonc.ds3231(i2c)
-uSD = fonc.uSD()
+uSD = fonc.uSD(spi ,uSD_cs)
 bme = fonc.bme280(i2c)
 veml = fonc.veml7700(i2c)
+ecran = fonc.Ecran(ecran_spi, dc, ecran_cs, reset, backlight, 0)
+internet = fonc.wifi_connection('CAL-Techno', 'technophys123')
 try:
     while True:                             # Boucle infinie
         buffLine = monserie.getLineBuffer() # Obtenir une ligne de commande si présente
@@ -92,25 +102,9 @@ try:
                 for x in Arg:
                     print('Arg['+ str(i) +'] = ' + x)
                     i = i + 1
-            
-        # Contrôle des Dels rouge et verte
-        if buffLine:                        
-            Commande, NbArg, Arg = mondecodeur.decode(buffLine)
-            
-            if Commande == 'DELR' and NbArg >= 1:
-                duty = map_int_limit(int(float(Arg[0])), 0, 100, 0, 1023)  # Mapping 0-100 à 0-1023
-                LedRouge.duty(duty) # Change Duty cycle
-                print(ack)
-            
-            elif Commande == 'DELV' and Arg[0] in ['ON', 'OFF']:
-                if Arg[0] == 'ON':            
-                   LedVerte.value(1)
-                elif Arg[0] == 'OFF':
-                   LedVerte.value(0)
-                print(ack)
                 
         # Contrôle des capteurs          
-            elif Commande == 'BME' and NbArg >=1:
+            if Commande == 'BME' and NbArg >=1:
                 if Arg[0] == 'Temp':
                     print("Temperature: ", bme.temp())
                     print(ack)
@@ -131,6 +125,8 @@ try:
                     
         # Contrôle écriture carte uSD            
             elif Commande == 'Save' and NbArg ==0:
+                uSD_cs.value(0)
+                ecran_cs.value(1)
                 data = {
                     "Temperature" : bme.temp(),
                     "Humidity" : bme.hum(),
@@ -146,13 +142,26 @@ try:
                 if Arg[0] == "get":
                     print(date.getDate())
                     print(ack)
-                elif Arg[0] == "set":
+                elif Arg[0] == "manuel":
                     YY, MM, mday, hh, mm, ss, wday, yday = Arg[1], Arg[2], Arg[3], Arg[4], Arg[5], Arg[6], Arg[7], Arg[8]
-                    print(date.setDate(YY, MM, mday, hh, mm, ss, wday, yday))
+                    print(date.setDate_manual(YY, MM, mday, hh, mm, ss, wday, yday))
                     print(ack)
+                elif Arg[0] == "ntp":
+                    date.setDate_ntp()
                 else:
                     print(nak)
 
+        # Contrôle Ecran
+            elif Commande == "Ecran" and NbArg >=1:
+                if Arg[0] == "clear":
+                    ecran.clear()
+                    print(ack)
+                elif Arg[0] == "menu":
+                    ecran.menu()
+                    print(ack)
+                else:
+                    print(nak)
+        
         sleep(1)
         
 except KeyboardInterrupt:                   # trap Ctrl-C input
