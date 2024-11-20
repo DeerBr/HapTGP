@@ -88,6 +88,8 @@ bme = fonc.bme280(i2c)
 veml = fonc.veml7700(i2c)
 ecran = fonc.Ecran(ecran_spi, dc, ecran_cs, reset, backlight, 0)
 internet = fonc.wifi_connection('CAL-Techno', 'technophys123')
+
+ecran.menu() # Premier affichage de l'écran
 try:
     while True:                             # Boucle infinie
         buffLine = monserie.getLineBuffer() # Obtenir une ligne de commande si présente
