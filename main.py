@@ -8,13 +8,10 @@
  la protection autour de l'écran est rotatif. Ces rotation sont détecter à l'aide d'une capteur de champ magnétique.
 
  Auteur:  Déryck Brais
- Fichier: firmWare_HapTGP
  Date:    29 novembre 2024
 -------------------------------------------
  Instructions:
-
- Chargez les modules xxxxxxxxx
-
+ 
  Pour fonctionnement dans Thonny:
  Connecter la carte protoTphys avec ESP32
 
